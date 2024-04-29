@@ -1,0 +1,11 @@
+go 1.20
+
+use (
+	./DataStructure/buffer
+	./DataStructure/linkedlist
+	./DataStructure/linkedlist/doublelinkedlist
+	./DataStructure/linkedlist/singlelinkedlist
+	./DataStructure/queue
+	./DataStructure/stack
+	./Sync/mutex
+)
