@@ -48,7 +48,13 @@ func TestRingOverWrite(t *testing.T) {
 	}
 
 	assert.Equal(t, 1, r.Readable())
-	assert.Equal(t, 0, r.Writable())
+	assert.Equal(t, 4, r.Writable())
+
+	written = r.Write([]byte{6, 7, 8})
+
+	assert.Equal(t, 1, written)
+	assert.Equal(t, 4, r.Readable())
+	assert.Equal(t, 1, r.Writable())
 }
 
 // func TestRingWriteAndRead(t *testing.T) {

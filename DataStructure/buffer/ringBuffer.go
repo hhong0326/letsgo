@@ -13,7 +13,11 @@ func NewRingBuffer[T any](size int) *RingBuffer[T] {
 }
 
 func (r *RingBuffer[T]) Writable() int {
-	return len(r.buf) - r.writePoint
+
+	if r.writePoint >= r.readPoint {
+		return len(r.buf) - r.writePoint + r.readPoint
+	}
+	return r.readPoint - r.writePoint
 }
 
 func (r *RingBuffer[T]) Write(data []T) int {
@@ -27,6 +31,14 @@ func (r *RingBuffer[T]) Write(data []T) int {
 		data = data[:available]
 	}
 
+	if len(r.buf)-r.writePoint < len(data) {
+		copy(r.buf[r.writePoint:], data[:len(r.buf)-r.writePoint])
+		copy(r.buf, data[len(r.buf)-r.writePoint:])
+		r.writePoint = len(data) - (len(r.buf) - r.writePoint)
+		available := r.Writable()
+		return available
+	}
+
 	copy(r.buf[r.writePoint:], data)
 	r.writePoint += len(data)
 
@@ -34,12 +46,22 @@ func (r *RingBuffer[T]) Write(data []T) int {
 }
 
 func (r *RingBuffer[T]) Readable() int {
-	return r.writePoint - r.readPoint
+	if r.writePoint >= r.readPoint {
+		return r.writePoint - r.readPoint
+	}
+
+	return len(r.buf) - r.readPoint + r.writePoint
 }
 
 func (r *RingBuffer[T]) Read(n int) []T {
 	if n > r.Readable() {
 		n = r.Readable()
+	}
+
+	if len(r.buf)-r.readPoint < n {
+		readedData := append(r.buf[r.readPoint:], r.buf[:n-len(r.buf)+r.readPoint]...)
+		r.readPoint = n - len(r.buf) + r.readPoint
+		return readedData
 	}
 
 	readedData := r.buf[r.readPoint : r.readPoint+n]
